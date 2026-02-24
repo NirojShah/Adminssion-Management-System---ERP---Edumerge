@@ -1,8 +1,9 @@
-import "./src/envSelector.js"
+import "./src/envSelector.js";
 import http from "http";
 import { connectDB } from "./src/config/db.config.js";
+import app from "./src/app.js";
 
-const server = http.createServer();
+const server = http.createServer(app);
 
 connectDB();
 
