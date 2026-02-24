@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
 import mysql from "mysql2/promise";
 import { initializeTables } from "../utility/initialize.table.js";
+import { ModelAssociation } from "../modules/association/association.js";
 
 // 🔹 Function to create DB if not exists
 const createDatabaseIfNotExists = async () => {
@@ -35,10 +36,15 @@ export const connectDB = async () => {
     await sequelize.sync({
       force: false,
     });
-    console.log("✅ Database connected successfully!");
+    console.log(" Database connected successfully!");
   } catch (error) {
-    console.error("❌ Unable to connect to DB:", error);
+    console.error(" Unable to connect to DB:", error);
   }
 };
 
 const Models = initializeTables(sequelize);
+ModelAssociation(Models);
+
+export const createTransaction = async () => {
+  return await sequelize.transaction();
+};
