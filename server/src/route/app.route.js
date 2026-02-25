@@ -9,6 +9,7 @@ import quotaRouter from "../modules/quota/quota.router.js";
 import applicantRouter from "../modules/applicant/applicant.route.js";
 import addmissionRouter from "../modules/addmission/addmission.router.js";
 import dashboardrouter from "../modules/dashboard/dashboard.route.js";
+import documentRouter from "../modules/document/document.route.js";
 
 const appRouter = Router();
 
@@ -22,5 +23,6 @@ appRouter.use("/quota", quotaRouter);
 appRouter.use("/applicant", applicantRouter);
 appRouter.use("/addmission", addmissionRouter);
 appRouter.use("/dashboard", dashboardrouter);
+appRouter.use("/document", documentRouter);
 
 export default appRouter;
