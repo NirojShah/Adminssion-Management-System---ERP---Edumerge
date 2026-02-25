@@ -8,54 +8,80 @@ Create Program
 =========================================
 */
 export const createProgramService = async (
-  {
-    departmentId,
-    academicYearId,
-    name,
-    courseType,
-    entryType,
-    totalIntake,
-  },
-  transaction
+  { departmentId, academicYearId, name, courseType, entryType, totalIntake },
+  transaction,
 ) => {
-  const department = await Department.findByPk(departmentId, {
-    transaction,
-  });
+  try {
+    // 1️⃣ Check Department
+    const department = await Department.findByPk(departmentId, {
+      transaction,
+    });
 
-  if (!department) {
+    if (!department) {
+      return {
+        success: false,
+        message: "Department not found",
+      };
+    }
+
+    // 2️⃣ Check Academic Year
+    const academicYear = await AcademicYear.findByPk(academicYearId, {
+      transaction,
+    });
+
+    if (!academicYear) {
+      return {
+        success: false,
+        message: "Academic year not found",
+      };
+    }
+
+    // OPTIONAL (recommended) ✅ ensure active academic year only
+    if (!academicYear.isActive) {
+      return {
+        success: false,
+        message: "Cannot create program for inactive academic year",
+      };
+    }
+
+    // 3️⃣ Prevent duplicate program in same dept + year
+    const existingProgram = await Program.findOne({
+      where: {
+        name,
+        departmentId,
+        academicYearId,
+      },
+      transaction,
+    });
+
+    if (existingProgram) {
+      return {
+        success: false,
+        message:
+          "Program already exists for this department in selected academic year",
+      };
+    }
+
+    // 4️⃣ Create Program
+    const program = await Program.create(
+      {
+        departmentId,
+        academicYearId,
+        name,
+        courseType,
+        entryType,
+        totalIntake,
+      },
+      { transaction },
+    );
+
     return {
-      success: false,
-      message: "Department not found",
+      success: true,
+      data: program,
     };
+  } catch (err) {
+    console.log(err)
   }
-
-  const academicYear = await AcademicYear.findByPk(academicYearId, {
-    transaction,
-  });
-
-  if (!academicYear) {
-    return {
-      success: false,
-      message: "Academic year not found",
-    };
-  }
-
-  const program = await Program.create(
-    {
-      departmentId,
-      academicYearId,
-      name,
-      courseType,
-      entryType,
-      totalIntake,
-    },
-    { transaction }
-  );
-
-  return {
-    success: true,
-    data: program,
-  };
 };
 
 /*
@@ -118,11 +144,7 @@ export const getProgramByIdService = async (id) => {
 Update Program
 =========================================
 */
-export const updateProgramService = async (
-  id,
-  updateData,
-  transaction
-) => {
+export const updateProgramService = async (id, updateData, transaction) => {
   const program = await Program.findByPk(id, { transaction });
 
   if (!program) {
