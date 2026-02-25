@@ -9,7 +9,7 @@ Create Admission (Seat Lock Only)
 */
 export const createAdmissionService = async (
   { applicantId, quotaId, allotmentNumber },
-  transaction
+  transaction,
 ) => {
   const applicant = await Applicant.findByPk(applicantId, {
     transaction,
@@ -59,7 +59,7 @@ export const createAdmissionService = async (
       status: "SEAT_LOCKED",
       feeStatus: "PENDING",
     },
-    { transaction }
+    { transaction },
   );
 
   quota.filledSeats += 1;
@@ -114,8 +114,7 @@ export const confirmAdmissionService = async (id, transaction) => {
     ],
   });
 
-  if (!admission)
-    return { success: false, message: "Admission not found" };
+  if (!admission) return { success: false, message: "Admission not found" };
 
   if (admission.status === "CONFIRMED")
     return { success: false, message: "Already confirmed" };
@@ -123,10 +122,7 @@ export const confirmAdmissionService = async (id, transaction) => {
   if (admission.feeStatus !== "PAID")
     return { success: false, message: "Fee not paid" };
 
-  const admissionNumber = await generateAdmissionNumber(
-    admission,
-    transaction
-  );
+  const admissionNumber = await generateAdmissionNumber(admission, transaction);
 
   admission.status = "CONFIRMED";
   admission.admissionNumber = admissionNumber;
@@ -182,23 +178,25 @@ Get All Admissions
 =========================================
 */
 export const getAllAdmissionsService = async () => {
-  const admissions = await Admission.findAll({
-    include: [
-      {
-        model: Applicant,
-        include: ["Program"],
-      },
-      {
-        model: Quota,
-        include: ["Program"],
-      },
-    ],
-  });
+  try {
+    const admissions = await Admission.findAll({
+      include: [
+        {
+          model: Applicant,
+        },
+        {
+          model: Quota,
+        },
+      ],
+    });
 
-  return {
-    success: true,
-    data: admissions,
-  };
+    return {
+      success: true,
+      data: admissions,
+    };
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 /*
@@ -238,10 +236,7 @@ export const getAdmissionByIdService = async (id) => {
 Generate Admission Number (Safe Version)
 =========================================
 */
-const generateAdmissionNumber = async (
-  admission,
-  transaction
-) => {
+const generateAdmissionNumber = async (admission, transaction) => {
   const year = new Date().getFullYear();
 
   const lastAdmission = await Admission.findOne({
@@ -254,9 +249,7 @@ const generateAdmissionNumber = async (
   let sequence = 1;
 
   if (lastAdmission?.admissionNumber) {
-    const lastSeq = parseInt(
-      lastAdmission.admissionNumber.split("/").pop()
-    );
+    const lastSeq = parseInt(lastAdmission.admissionNumber.split("/").pop());
     sequence = lastSeq + 1;
   }
 
